@@ -1,58 +1,64 @@
 import React from 'react';
-import * as SQLite from 'expo-sqlite';
 
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, AsyncStorage } from 'react-native';
 
 import Colours from './constants/colours.js';
 import Card from './components/card.js';
 import Header from './components/header.js';
 
-const db = SQLite.openDatabase("db.db");
-
 class App extends React.Component {
     state={
-        items:null
+        items:null,
+        isMounted:false,
     }
+
     componentDidMount(){
+        this.setState({isMounted:true});
         this.update();
     }
-    update(){
-        db.transaction(tx => {
-            tx.executeSql(
-                "create table if not exists items (id integer primary key not null, string name, int date, string quantity, string colour);"
-            );
-            tx.executeSql("insert into items (name, date, quantity, colour) values (?, ?, ?, ?)", ["this.state.name","this.state.date","this.state.quantity","this.state.colour"]);
-            tx.executeSql(
-                `select * from items;`,
-                [],
-                (_, { rows: { _array } }) =>(this.setState({items:_array}) )
-            );
-            tx.executeSql("select * from items", [], (_, { rows }) => console.log(JSON.stringify(rows)) );
-        });
-
-        console.log(db)
+    componentWillUnmount(){
+        this.setState({isMounted:false});
+    }
+    update = async () =>{
+        if (this.state.isMounted){
+            try {
+                var value = await AsyncStorage.getItem('data');
+                value = value.split("|")
+                if (value !== null) {
+                    // We have data!!
+                    this.setState({items:value});
+                }
+            } catch (error) {
+                // Error retrieving data
+                console.log(error)
+            }
+            console.log("items after update: "+this.state.items)
+        }
     }
     render(){
         if (this.state.items === null || this.state.items.length === 0) {
             return (
                 <View style={styles.container}>
-                    <Header forceUpdate={this.update()}/>
+                    <Header forceUpdate={this.update}/>
                     <View style={styles.center}>
                         <Text style={styles.dataText}>Press the + in the top right to add a product!</Text>
                     </View>
                 </View>
             );
         }
+        console.log("items in render: "+this.state.items)
         return (
             <View style={styles.container}>
-                <Header forceUpdate={this.update()}/>
+                <Header forceUpdate={this.update}/>
                 <ScrollView>
-                    {this.state.items.map(({ name, date, quantity, colour }) => (
+                    {this.state.items.map(row => (
                         <Card
-                            name={name}
-                            date={date}
-                            quantity={quantity}
-                            colour={colour}
+                            key={row.split(",")[0]}
+                            id={row.split(",")[0]}
+                            name={row.split(",")[1]}
+                            date={row.split(",")[2]}
+                            quantity={row.split(",")[3]}
+                            colour={row.split(",")[4]}
                         />
                     ))}
                 </ScrollView>

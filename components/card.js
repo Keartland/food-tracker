@@ -1,14 +1,18 @@
 import React from 'react';
-import * as SQLite from 'expo-sqlite';
 
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 
 import Colours from '../constants/colours.js';
 
-const db = SQLite.openDatabase("db.db");
+function formatDate(date) {
+    var d = new Date(Number(date))
+    var ret = d.toISOString().split("T")[0].split("-").reverse().join("/")
+    return ret;
+}
 
 export default function card(props) {
+    if (props.id == ""){return null}
     return (
         <View style={[styles.container, { backgroundColor: Colours.cardColours[props.colour]}]}>
             <View style={styles.infoTitle}>
@@ -20,7 +24,9 @@ export default function card(props) {
             <View style={styles.infoRow}>
                 <View style={{marginRight:50}}>
                     <Text style={[styles.titleText, styles.textShadow]}>Use By Date</Text>
-                    <Text style={[styles.dataText, styles.textShadow]}>{new Date(props.date).toISOString().slice(0,10).split("-").reverse().join("/")}</Text>
+                    <Text style={[styles.dataText, styles.textShadow]}>{
+                        formatDate(props.date)
+                    }</Text>
                 </View>
                 <View>
                     <Text style={[styles.titleText, styles.textShadow]}>Quantity</Text>
@@ -29,6 +35,7 @@ export default function card(props) {
             </View>
         </View>
     );
+
 }
 
 const styles = StyleSheet.create({

@@ -1,49 +1,48 @@
 import React from 'react';
-import * as SQLite from 'expo-sqlite';
 
-import { StyleSheet, Text, View, TouchableOpacity, Animated, TextInput } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, AsyncStorage, TextInput } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 import Colours from '../constants/colours.js';
 import Card from '../components/card.js';
 
-const db = SQLite.openDatabase("db.db");
-
 class card extends React.Component {
     state = {
+        id:0,
         name:"",
-        date:new Date().toString(),
+        date:new Date().getTime(),
         quantity:"1",
         colour:0,
-        show:true,
+        show:false,
         showDate:false,
     }
-    addRecord(){
+    addRecord = async () => {
+        try {
+            var value = await AsyncStorage.getItem('data');
+            value = value.split("|")
+            value.push(this.state.id+","+this.state.name + "," + new Date(this.state.date).getTime() + "," + this.state.quantity + "," + this.state.colour)
+            await AsyncStorage.setItem('data', value.join("|"));
+        } catch (error) {
+            // Error saving data
+            console.log(error.message)
+        }
+        this.props.forceUpdate()
         this.setState({
             name:"",
-            date:new Date().toString(),
+            date:new Date().getTime(),
             quantity:"1",
             colour:0,
             show:false,
             showDate:false
         })
-        console.log(db)
-        db.transaction(
-            tx => {
-                tx.executeSql("insert into items (name, date, quantity, colour) values (?, ?, ?, ?)", [this.state.name,this.state.date,this.state.quantity,this.state.colour]);
-                tx.executeSql("select * from items", [], (_, { rows }) => console.log(JSON.stringify(rows)) );
-            },
-            null,
-            this.props.forceUpdate
-        );
     }
     render(){
         return (
             <View style={styles.container}>
                 <View style={styles.flexBox}>
                     <Text style={styles.headerText}>Product Tracker</Text>
-                    <TouchableOpacity onPress={() => this.setState({show:true})}>
+                    <TouchableOpacity onPress={() => this.setState({show:!this.state.show})}>
                         <FontAwesome style={styles.plusButton} name="plus"/>
                     </TouchableOpacity>
                 </View>
