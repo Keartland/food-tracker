@@ -23,20 +23,18 @@ class App extends React.Component {
         if (this.state.isMounted){
             try {
                 var value = await AsyncStorage.getItem('data');
-                value = value.split("|")
-                if (value !== null) {
-                    // We have data!!
+                if (value !== null) { value = value.split("|") }
                     this.setState({items:value});
-                }
             } catch (error) {
                 // Error retrieving data
+                await AsyncStorage.setItem('data', "");
                 console.log(error)
             }
-            console.log("items after update: "+this.state.items)
         }
     }
-    render(){
+    render () {
         if (this.state.items === null || this.state.items.length === 0) {
+            this.update();
             return (
                 <View style={styles.container}>
                     <Header forceUpdate={this.update}/>
@@ -46,19 +44,19 @@ class App extends React.Component {
                 </View>
             );
         }
-        console.log("items in render: "+this.state.items)
         return (
             <View style={styles.container}>
                 <Header forceUpdate={this.update}/>
                 <ScrollView>
                     {this.state.items.map(row => (
                         <Card
-                            key={row.split(",")[0]}
-                            id={row.split(",")[0]}
-                            name={row.split(",")[1]}
-                            date={row.split(",")[2]}
-                            quantity={row.split(",")[3]}
-                            colour={row.split(",")[4]}
+                            key={row.split("\t")[0]}
+                            id={row.split("\t")[0]}
+                            name={row.split("\t")[1]}
+                            date={row.split("\t")[2]}
+                            quantity={row.split("\t")[3]}
+                            colour={row.split("\t")[4]}
+                            forceUpdate={this.update}
                         />
                     ))}
                 </ScrollView>
